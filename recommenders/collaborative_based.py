@@ -70,6 +70,22 @@ def prediction_item(item_id):
         predictions.append(model.predict(iid=item_id,uid=ui, verbose = False))
     return predictions
 
+    kf = KFold(n_splits=3)
+    algo = KNNBasic()
+    best_algo = None
+    best_rmse = 1000.0
+    best_pred = None
+    for trainset, testset in kf.split(data):
+        # train and test algorithm.
+        algo.fit(trainset)
+        predictions = algo.test(testset)
+        # Compute and print Root Mean Squared Error
+        rmse = accuracy.rmse(predictions, verbose=True)
+        if rmse < best_rmse:
+            best_algo = algo
+            best_pred = predictions
+    return predictions
+
 def pred_movies(movie_list):
     """Maps the given favourite movies selected within the app to corresponding
     users within the MovieLens dataset.
@@ -138,6 +154,7 @@ def collab_model(movie_list,top_n=10):
     score_series_3 = pd.Series(rank_3).sort_values(ascending = False)
      # Appending the names of movies
     listings = score_series_1.append(score_series_1).append(score_series_3).sort_values(ascending = False)
+    # Store movie names
     recommended_movies = []
     # Choose top 50
     top_50_indexes = list(listings.iloc[1:50].index)
